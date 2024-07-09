@@ -1,89 +1,83 @@
-const X_CLASS = 'x';
-const O_CLASS = 'o';
-const WINNING_COMBINATIONS = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
-];
-const cellElements = document.querySelectorAll('[data-cell]');
-const board = document.getElementById('board');
-const winningMessageElement = document.getElementById('winning-message');
-const winningMessageTextElement = document.querySelector('[data-winning-message-text]');
-const restartButton = document.getElementById('restartButton');
-let oTurn;
+let boxes = document.querySelectorAll(".box");
 
-startGame();
+let turn = "X";
+let isGameOver = false;
 
-restartButton.addEventListener('click', startGame);
+boxes.forEach(e =>{
+    e.innerHTML = "";
+    e.addEventListener("click", ()=>{
+        if(!isGameOver && e.innerHTML === ""){
+            e.innerHTML = turn;
+            checkWin();
+            checkDraw();
+            changeTurn();
+        }
+    })
+})
 
-function startGame() {
-    oTurn = false;
-    cellElements.forEach(cell => {
-        cell.classList.remove(X_CLASS);
-        cell.classList.remove(O_CLASS);
-        cell.removeEventListener('click', handleClick);
-        cell.addEventListener('click', handleClick, { once: true });
-    });
-    setBoardHoverClass();
-    winningMessageElement.classList.remove('show');
-}
-
-function handleClick(e) {
-    const cell = e.target;
-    const currentClass = oTurn ? O_CLASS : X_CLASS;
-    placeMark(cell, currentClass);
-    if (checkWin(currentClass)) {
-        endGame(false);
-    } else if (isDraw()) {
-        endGame(true);
-    } else {
-        swapTurns();
-        setBoardHoverClass();
+function changeTurn(){
+    if(turn === "X"){
+        turn="O";
+        document.querySelector(".bg").style.left = "85px";
+    }
+    else{
+        turn="X";
+        document.querySelector(".bg").style.left = "0px";
     }
 }
 
-function endGame(draw) {
-    if (draw) {
-        winningMessageTextElement.innerText = 'Draw!';
-    } else {
-        winningMessageTextElement.innerText = `${oTurn ? "O's" : "X's"} Wins!`;
-    }
-    winningMessageElement.classList.add('show');
-}
+function checkWin(){
+    let winConditions =[
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ]
 
-function isDraw() {
-    return [...cellElements].every(cell => {
-        return cell.classList.contains(X_CLASS) || cell.classList.contains(O_CLASS);
-    });
-}
+    for(let i=0; i<winConditions.length; i++){
+        let v0 = boxes[winConditions[i][0]].innerHTML;
+        let v1 = boxes[winConditions[i][1]].innerHTML;
+        let v2 = boxes[winConditions[i][2]].innerHTML;
 
-function placeMark(cell, currentClass) {
-    cell.classList.add(currentClass);
-}
+        if(v0 != "" && v0 === v1 && v0 === v2){
+            isGameOver = true;
+            document.querySelector("#results").innerHTML = turn + " win";
+            document.querySelector("#play-again").style.display = "inline";
 
-function swapTurns() {
-    oTurn = !oTurn;
-}
-
-function setBoardHoverClass() {
-    board.classList.remove(X_CLASS);
-    board.classList.remove(O_CLASS);
-    if (oTurn) {
-        board.classList.add(O_CLASS);
-    } else {
-        board.classList.add(X_CLASS);
+            for(j = 0; j<3; j++){
+                boxes[winConditions[i][j]].style.backgroundColor = "green";
+                boxes[winConditions[i][j]].style.color = "black"
+            }
+        }
     }
 }
 
-function checkWin(currentClass) {
-    return WINNING_COMBINATIONS.some(combination => {
-        return combination.every(index => {
-            return cellElements[index].classList.contains(currentClass);
-        });
-    });
+function checkDraw(){
+    if(! isGameOver){
+        let isDraw =true;
+        boxes.forEach(e =>{
+            if(e.innerHTML === "") isDraw = false;
+        })
+
+        if(isDraw){
+            isGameOver = true;
+            document.querySelector("#results").innerHTML = "Draw";
+            document.querySelector("#play-again").style.display = "inline";
+        }
+    }
+
 }
+
+document.querySelector("#play-again").addEventListener("click", ()=>{
+    isGameOver = false;
+    turn = "X";
+    document.querySelector(".bg").style.left = "0";
+    document.querySelector("#results").innerHTML = "";
+    document.querySelector("#play-again").style.display = "none";
+
+    boxes.forEach(e =>{
+        e.innerHTML = "";
+        e.style.removeProperty("background-color");
+        e.style.color = "white";
+    })
+})
+
